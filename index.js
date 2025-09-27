@@ -13,12 +13,31 @@ cloudinary.v2.config({
     api_secret: process.env.Cloud_Secret,
   });
 
-const app = express();
-const corsOptions = {
-  origin: 'http://localhost:5173/',
+const app = express()
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.FRONTEND_URL_2
+]
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, origin)
+    } else {
+      callback(new Error("Not allowed by CORS"))
+    }
+  },
+  
   credentials: true
-}
-app.use(cors(corsOptions));
+}))
+
+
+app.get("/",(request,response)=>{
+    ///server to client
+    response.json({
+        message : "Server is running " + PORT
+    })
+})
 
 const port = process.env.PORT || 5000;
 
@@ -35,13 +54,6 @@ app.use('/api/user', userRoutes);
 app.use("/api/pin", pinRoutes);
 
 
-const __dirname = path.resolve();
-
-app.use(express.static(path.join(__dirname, "/frontend/dist")));
-
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
-});
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
