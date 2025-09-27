@@ -39,7 +39,7 @@ app.get("/",(request,response)=>{
     })
 })
 
-const port = process.env.PORT || 5000;
+const PORT =  process.env.PORT || 8080
 
 
 //using middleweares
@@ -55,7 +55,7 @@ app.use("/api/pin", pinRoutes);
 
 
 
-app.listen(port, () => {
-    console.log(`Server is running on http://localhost:${port}`);
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
     connectDb();
 })
