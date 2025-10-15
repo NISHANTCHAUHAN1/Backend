@@ -17,37 +17,50 @@ cloudinary.v2.config({
 
 const app = express()
 
-// Define allowed origins and filter out any undefined/null values
-// Add a sensible default for local development so requests from Vite (http://localhost:5173)
-// are allowed when NODE_ENV !== 'production' and env vars are not set.
+// Build allowed origins list from environment variables. Support comma-separated lists
+// so you can provide multiple allowed origins in a single env var.
 const devDefaultOrigin = 'http://localhost:5173';
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  process.env.FRONTEND_URL_2,
-  ...(process.env.NODE_ENV !== 'production' ? [devDefaultOrigin] : [])
-].filter(Boolean); // .filter(Boolean) removes undefined, null, and empty string entries
+function parseOrigins(...vals) {
+  const list = [];
+  for (const v of vals) {
+    if (!v) continue;
+    // split on comma and trim
+    v.split(',').map(s => s.trim()).filter(Boolean).forEach(s => list.push(s));
+  }
+  return list;
+}
 
-// CORS Configuration
-app.use(cors({
+let allowedOrigins = parseOrigins(process.env.FRONTEND_URL, process.env.FRONTEND_URL_2);
+if (process.env.NODE_ENV !== 'production' && !allowedOrigins.includes(devDefaultOrigin)) {
+  allowedOrigins.push(devDefaultOrigin);
+}
+
+// remove duplicates
+allowedOrigins = [...new Set(allowedOrigins)];
+console.log('Allowed CORS origins:', allowedOrigins);
+
+if (process.env.NODE_ENV !== 'production') {
+  allowedOrigins.push('http://localhost:5173');
+}
+
+const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, curl, or same-origin requests during development)
     if (!origin) return callback(null, true);
 
-    // Check if the requesting origin is in our allowed list
     if (allowedOrigins.includes(origin)) {
-      // allow this origin
       return callback(null, true);
     }
 
-    // Do not throw here — throwing an error inside the CORS callback results in an exception
-    // and typically a 500 response. Instead, disallow the origin cleanly so the browser
-    // will block the response via missing CORS headers.
     console.error(`CORS blocked request from origin: ${origin}`);
     return callback(null, false);
   },
-  credentials: true
-}))
+  credentials: true,
+};
+app.use(cors(corsOptions));
 
+// Make sure preflight requests are handled by CORS middleware
+app.options('*', cors(corsOptions));
 const PORT =  process.env.PORT || 8080
 
 // Using middlewares
