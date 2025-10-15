@@ -17,50 +17,14 @@ cloudinary.v2.config({
 
 const app = express()
 
-// Build allowed origins list from environment variables. Support comma-separated lists
-// so you can provide multiple allowed origins in a single env var.
-const devDefaultOrigin = 'http://localhost:5173';
-function parseOrigins(...vals) {
-  const list = [];
-  for (const v of vals) {
-    if (!v) continue;
-    // split on comma and trim
-    v.split(',').map(s => s.trim()).filter(Boolean).forEach(s => list.push(s));
-  }
-  return list;
-}
-
-let allowedOrigins = parseOrigins(process.env.FRONTEND_URL, process.env.FRONTEND_URL_2);
-if (process.env.NODE_ENV !== 'production' && !allowedOrigins.includes(devDefaultOrigin)) {
-  allowedOrigins.push(devDefaultOrigin);
-}
-
-// remove duplicates
-allowedOrigins = [...new Set(allowedOrigins)];
-console.log('Allowed CORS origins:', allowedOrigins);
-
-if (process.env.NODE_ENV !== 'production') {
-  allowedOrigins.push('http://localhost:5173');
-}
-
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps, curl, or same-origin requests during development)
-    if (!origin) return callback(null, true);
-
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    console.error(`CORS blocked request from origin: ${origin}`);
-    return callback(null, false);
-  },
+  origin: 'http://localhost:5173',
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
-app.use(cors(corsOptions));
 
-// Make sure preflight requests are handled by CORS middleware
-app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
 const PORT =  process.env.PORT || 8080
 
 // Using middlewares
