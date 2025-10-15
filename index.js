@@ -4,7 +4,6 @@ import connectDb from './database/db.js';
 import cookieParser from "cookie-parser";
 import cloudinary from 'cloudinary';
 import cors from 'cors';
-import path from 'path'; // path is not used here but was in the original file, keeping imports consistent
 
 dotenv.config();
 
