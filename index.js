@@ -7,56 +7,56 @@ import cors from 'cors';
 
 dotenv.config();
 
-// Configure Cloudinary (no changes needed here)
+// --- Cloudinary Config ---
 cloudinary.v2.config({
-    cloud_name: process.env.Cloud_Name,
-    api_key: process.env.Cloud_Api,
-    api_secret: process.env.Cloud_Secret,
+  cloud_name: process.env.Cloud_Name,
+  api_key: process.env.Cloud_Api,
+  api_secret: process.env.Cloud_Secret,
 });
 
-const app = express()
+const app = express();
 
-// const corsOptions = {
-//   origin: 'http://localhost:5173',
-//   credentials: true,
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-//   allowedHeaders: ['Content-Type', 'Authorization'],
-// };
+// --- Dynamic CORS Setup (same logic as your reference) ---
+const allowedOrigins = [
+  process.env.FRONTEND_URL,     // e.g. deployed frontend
+  process.env.FRONTEND_URL_2,   // optional secondary
+  process.env.FRONTEND_URL_3,   // optional third
+  'http://localhost:5173',      // local dev
+].filter(Boolean);
 
-const corsOptions = {
-  origin: [
-    'http://localhost:5173',           // for local dev
-    'https://gfdrty.netlify.app/'    // your deployed frontend
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-};
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Allow requests with no Origin (like mobile apps, curl, etc.)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  })
+);
 
+// --- Middlewares ---
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(cookieParser());
 
-app.use(cors(corsOptions));
-const PORT =  process.env.PORT || 8080
-
-// Using middlewares
-app.use(express.json());  // Data parsing for register and login
-app.use(cookieParser());  // Middleware for parsing cookies
-
-// Import routing
+// --- Routes ---
 import userRoutes from './routes/userRoutes.js';
 import pinRoutes from "./routes/pinRoutes.js";
 
-// Routes
 app.use('/api/user', userRoutes);
 app.use("/api/pin", pinRoutes);
 
-// Simple health check route
-app.get("/",(request,response)=>{
-    response.json({
-        message : "Server is running on PORT " + PORT
-    })
-})
+// --- Health check ---
+app.get("/", (req, res) => {
+  res.json({ message: `Server is running on PORT ${process.env.PORT || 8080}` });
+});
+
+// --- Server + DB connection ---
+const PORT = process.env.PORT || 8080;
 
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-    connectDb();
-})
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+  connectDb();
+});
