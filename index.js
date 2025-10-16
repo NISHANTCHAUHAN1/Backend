@@ -26,7 +26,7 @@ const app = express()
 const corsOptions = {
   origin: [
     'http://localhost:5173',           // for local dev
-    'https://nish-pin.netlify.app'     // your deployed frontend
+    'https://gfdrty.netlify.app/'    // your deployed frontend
   ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
